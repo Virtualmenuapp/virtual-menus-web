@@ -36,7 +36,7 @@
         <p id="loading-text">Cargando Menú: 0%</p>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
+    <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
              embedded color-space="sRGB" 
              renderer="colorManagement: true, physicallyCorrectLights, alpha: true" 
              transparent="true"
@@ -87,13 +87,13 @@
         };
         document.body.appendChild(script);
 
-        // Truco para móviles: Un toque en la pantalla negra puede despertar la cámara
-        document.body.addEventListener("click", () => {
+        // CAMBIO 2: Evento blindado. window atrapa el clic antes que Unity lo bloquee
+        window.addEventListener("click", () => {
             const sceneEl = document.querySelector('a-scene');
-            if (sceneEl.systems['mindar-image-system']) {
+            if (sceneEl && sceneEl.systems['mindar-image-system']) {
                 sceneEl.systems['mindar-image-system'].start(); 
             }
-        }, {once: true});
+        }, {once: true, capture: true});
     </script>
 </body>
 </html>
