@@ -17,7 +17,7 @@
         #unity-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: transparent; }
         #unity-canvas { width: 100%; height: 100%; background: transparent; }
         
-        /* Capa de carga */
+        /* Capa de carga y botón */
         #loading-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: white; display: flex; flex-direction: column; 
@@ -26,6 +26,16 @@
         #loading-bar-container { width: 250px; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin-top: 20px; }
         #loading-bar-full { width: 0%; height: 100%; background: #2196f3; transition: width 0.2s; }
         #loading-text { font-family: sans-serif; margin-top: 10px; color: #555; font-size: 14px; }
+        
+        /* ESTILO DEL BOTÓN DE INICIO */
+        #start-ar-btn {
+            display: none; /* Oculto hasta que Unity cargue al 100% */
+            margin-top: 20px; padding: 15px 30px; font-size: 18px; font-weight: bold;
+            color: white; background-color: #ff5722; border: none; border-radius: 8px;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            pointer-events: auto; /* Asegura que reciba el clic */
+        }
+        #start-ar-btn:active { background-color: #e64a19; transform: scale(0.98); }
     </style>
 </head>
 
@@ -34,6 +44,8 @@
         <img src="SplashVirtualMenus.jpg" style="width: 200px;">
         <div id="loading-bar-container"><div id="loading-bar-full"></div></div>
         <p id="loading-text">Cargando Menú: 0%</p>
+        
+        <button id="start-ar-btn">INICIAR CÁMARA</button>
     </div>
 
     <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
@@ -54,7 +66,9 @@
     <script>
         const overlay = document.querySelector("#loading-overlay");
         const progressBarFull = document.querySelector("#loading-bar-full");
+        const progressContainer = document.querySelector("#loading-bar-container");
         const progressText = document.querySelector("#loading-text");
+        const startBtn = document.querySelector("#start-ar-btn");
         const canvas = document.querySelector("#unity-canvas");
 
         const buildUrl = "Build";
@@ -77,23 +91,29 @@
                 progressBarFull.style.width = percent + "%";
                 progressText.innerHTML = "Cargando Menú: " + percent + "%";
             }).then((unityInstance) => {
-                // Ocultamos la carga y dejamos que Unity tome el control transparente
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 1000);
+                
+                // 1. Ocultar la barra y el texto de carga
+                progressContainer.style.display = "none";
+                progressText.style.display = "none";
+                
+                // 2. Mostrar el botón mágico
+                startBtn.style.display = "block";
+                
+                // 3. Al hacer clic en el botón, desaparece la pantalla blanca y arranca la cámara
+                startBtn.addEventListener("click", () => {
+                    overlay.style.display = "none"; 
+                    
+                    const sceneEl = document.querySelector('a-scene');
+                    if (sceneEl && sceneEl.systems['mindar-image-system']) {
+                        sceneEl.systems['mindar-image-system'].start(); 
+                    }
+                });
+
             }).catch((message) => {
                 alert("Error al cargar Unity: " + message);
             });
         };
         document.body.appendChild(script);
-
-        // CAMBIO 2: Evento blindado. window atrapa el clic antes que Unity lo bloquee
-        window.addEventListener("click", () => {
-            const sceneEl = document.querySelector('a-scene');
-            if (sceneEl && sceneEl.systems['mindar-image-system']) {
-                sceneEl.systems['mindar-image-system'].start(); 
-            }
-        }, {once: true, capture: true});
     </script>
 </body>
 </html>
