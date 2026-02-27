@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.gstatic.com;">
+    
+    <title>VirtualMenus_App</title>
+
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #unity-container { width: 100%; height: 100%; position: absolute; background: transparent; z-index: 10; }
+        #unity-canvas { width: 100%; height: 100%; background: transparent; }
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #loading-bar-full { width: 0%; height: 10px; background: #2196f3; transition: width 0.3s; }
+        #loading-bar-container { width: 200px; height: 10px; background: #ccc; border-radius: 5px; overflow: hidden; }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <img src="SplashVirtualMenus.jpg" style="width: 200px; margin-bottom: 20px;">
+        <div id="loading-bar-container"><div id="loading-bar-full"></div></div>
+        <p>Cargando Experiencia...</p>
+    </div>
+
+    <div id="unity-container">
+        <canvas id="unity-canvas"></canvas>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiLoading: no; uiScanning: no;" 
+             embedded color-space="sRGB" 
+             renderer="colorManagement: true, physicallyCorrectLights" 
+             vr-mode-ui="enabled: false" 
+             device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity mindar-image-target="targetIndex: 0"></a-entity>
+    </a-scene>
+
+    <script>
+        const overlay = document.querySelector("#loading-overlay");
+        const progressBarFull = document.querySelector("#loading-bar-full");
+        const canvas = document.querySelector("#unity-canvas");
+
+        const buildUrl = "Build";
+        const loaderUrl = buildUrl + "/export_virtualmenuapp.loader.js";
+        const config = {
+            dataUrl: buildUrl + "/export_virtualmenuapp.data",
+            frameworkUrl: buildUrl + "/export_virtualmenuapp.framework.js",
+            codeUrl: buildUrl + "/export_virtualmenuapp.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "Virtual_Menus",
+            productName: "VirtualMenus_App",
+            productVersion: "0.1",
+        };
+
+        const script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                progressBarFull.style.width = 100 * progress + "%";
+            }).then((unityInstance) => {
+                // FORZADO: Quita el splash un segundo después de cargar
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 1000);
+            }).catch((message) => { alert(message); });
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
