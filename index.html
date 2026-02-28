@@ -38,27 +38,45 @@
     <div id="unity-container"><canvas id="unity-canvas"></canvas></div>
 
     <script>
+        const buildUrl = "Build";
+        const loaderUrl = buildUrl + "/export_virtualmenuapp.loader.js";
         const config = {
-            dataUrl: "Build/export_virtualmenuapp.data",
-            frameworkUrl: "Build/export_virtualmenuapp.framework.js",
-            codeUrl: "Build/export_virtualmenuapp.wasm",
+            dataUrl: buildUrl + "/export_virtualmenuapp.data",
+            frameworkUrl: buildUrl + "/export_virtualmenuapp.framework.js",
+            codeUrl: buildUrl + "/export_virtualmenuapp.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "Virtual_Menus",
             productName: "VirtualMenus_App",
             productVersion: "0.1",
-            // ESTA LÍNEA ES VITAL
+            // ESTA LÍNEA ES VITAL PARA LA TRANSPARENCIA
             webglContextAttributes: { alpha: true, preserveDrawingBuffer: true }
         };
 
-        createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
-            document.querySelector("#loading-text").innerHTML = "Cargando: " + Math.round(progress * 100) + "%";
-        }).then((unityInstance) => {
-            document.querySelector("#start-ar-btn").style.display = "block";
-            document.querySelector("#start-ar-btn").addEventListener("click", () => {
-                document.querySelector("#loading-overlay").style.display = "none";
-                document.querySelector('a-scene').systems['mindar-image-system'].start();
+        const canvas = document.querySelector("#unity-canvas");
+        const loadingText = document.querySelector("#loading-text");
+        const startBtn = document.querySelector("#start-ar-btn");
+        const overlay = document.querySelector("#loading-overlay");
+
+        // ESTO FUE LO QUE BORRÉ POR ERROR (Inyecta el script de Unity)
+        const script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                loadingText.innerHTML = "Cargando: " + Math.round(progress * 100) + "%";
+            }).then((unityInstance) => {
+                startBtn.style.display = "block";
+                startBtn.addEventListener("click", () => {
+                    overlay.style.display = "none";
+                    const sceneEl = document.querySelector('a-scene');
+                    if (sceneEl && sceneEl.systems['mindar-image-system']) {
+                        sceneEl.systems['mindar-image-system'].start();
+                    }
+                });
+            }).catch((message) => {
+                alert("Error al cargar Unity: " + message);
             });
-        });
+        };
+        document.body.appendChild(script);
     </script>
 </body>
 </html>
