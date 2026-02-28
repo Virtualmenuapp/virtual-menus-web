@@ -3,121 +3,62 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://aframe.io https://cdn.jsdelivr.net https://www.gstatic.com blob: data:; img-src 'self' data: blob: https://*; connect-src 'self' https://* blob: data:;">
-
     <title>VirtualMenus_App</title>
-
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
     <style>
-        /* Forzamos transparencia en todas las capas base */
-        body { margin: 0; overflow: hidden; background-color: transparent !important; }
-        
+        body { margin: 0; overflow: hidden; background: none !important; }
         #unity-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: transparent !important; }
         #unity-canvas { width: 100%; height: 100%; background: transparent !important; }
         
-        /* REFUERZO CSS: Asegura que el video de la cámara esté al fondo pero visible */
+        /* FORZAMOS EL VIDEO A PANTALLA COMPLETA */
         video { 
-            position: absolute; top: 0; left: 0; z-index: -1; 
-            width: 100vw; height: 100vh; object-fit: cover; 
+            position: absolute !important; top: 0 !important; left: 0 !important; 
+            z-index: -1 !important; width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; 
         }
 
-        /* Oculta el lienzo de A-Frame que a veces se pone negro por error */
-        .a-canvas { opacity: 0; } 
-
-        /* Capa de carga */
-        #loading-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: white; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 1000; 
-        }
-        #loading-bar-container { width: 250px; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin-top: 20px; }
-        #loading-bar-full { width: 0%; height: 100%; background: #2196f3; transition: width 0.2s; }
-        #loading-text { font-family: sans-serif; margin-top: 10px; color: #555; font-size: 14px; }
-        
-        /* Botón de inicio AR */
-        #start-ar-btn {
-            display: none; margin-top: 20px; padding: 15px 30px; font-size: 18px; font-weight: bold;
-            color: white; background-color: #ff5722; border: none; border-radius: 8px;
-            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            pointer-events: auto;
-        }
-        #start-ar-btn:active { background-color: #e64a19; transform: scale(0.98); }
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        #start-ar-btn { display: none; margin-top: 20px; padding: 15px 30px; font-size: 18px; font-weight: bold; color: white; background-color: #ff5722; border: none; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
-
 <body>
     <div id="loading-overlay">
         <img src="SplashVirtualMenus.jpg" style="width: 200px;">
-        <div id="loading-bar-container"><div id="loading-bar-full"></div></div>
-        <p id="loading-text">Cargando Menú: 0%</p>
+        <p id="loading-text">Cargando: 0%</p>
         <button id="start-ar-btn">INICIAR CÁMARA</button>
     </div>
 
     <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
-             embedded color-space="sRGB" 
-             renderer="colorManagement: true, physicallyCorrectLights, alpha: true" 
-             vr-mode-ui="enabled: false" 
-             device-orientation-permission-ui="enabled: false">
-        
+             embedded color-space="sRGB" renderer="alpha: true; colorManagement: true;" vr-mode-ui="enabled: false">
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
         <a-entity mindar-image-target="targetIndex: 0"></a-entity>
     </a-scene>
 
-    <div id="unity-container">
-        <canvas id="unity-canvas"></canvas>
-    </div>
+    <div id="unity-container"><canvas id="unity-canvas"></canvas></div>
 
     <script>
-        const overlay = document.querySelector("#loading-overlay");
-        const progressBarFull = document.querySelector("#loading-bar-full");
-        const progressContainer = document.querySelector("#loading-bar-container");
-        const progressText = document.querySelector("#loading-text");
-        const startBtn = document.querySelector("#start-ar-btn");
-        const canvas = document.querySelector("#unity-canvas");
-
-        const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/export_virtualmenuapp.loader.js";
         const config = {
-            dataUrl: buildUrl + "/export_virtualmenuapp.data",
-            frameworkUrl: buildUrl + "/export_virtualmenuapp.framework.js",
-            codeUrl: buildUrl + "/export_virtualmenuapp.wasm",
+            dataUrl: "Build/export_virtualmenuapp.data",
+            frameworkUrl: "Build/export_virtualmenuapp.framework.js",
+            codeUrl: "Build/export_virtualmenuapp.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "Virtual_Menus",
             productName: "VirtualMenus_App",
             productVersion: "0.1",
-            // IMPORTANTE: Atributos para transparencia en WebGL
-            webglContextAttributes: { preserveDrawingBuffer: true, alpha: true },
+            // ESTA LÍNEA ES VITAL
+            webglContextAttributes: { alpha: true, preserveDrawingBuffer: true }
         };
 
-        const script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                const percent = Math.round(progress * 100);
-                progressBarFull.style.width = percent + "%";
-                progressText.innerHTML = "Cargando Menú: " + percent + "%";
-            }).then((unityInstance) => {
-                // Preparar UI de inicio
-                progressContainer.style.display = "none";
-                progressText.style.display = "none";
-                startBtn.style.display = "block";
-                
-                startBtn.addEventListener("click", () => {
-                    overlay.style.display = "none"; 
-                    const sceneEl = document.querySelector('a-scene');
-                    if (sceneEl && sceneEl.systems['mindar-image-system']) {
-                        // Arranca la cámara tras la interacción del usuario
-                        sceneEl.systems['mindar-image-system'].start(); 
-                    }
-                });
-            }).catch((message) => {
-                alert("Error al cargar Unity: " + message);
+        createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
+            document.querySelector("#loading-text").innerHTML = "Cargando: " + Math.round(progress * 100) + "%";
+        }).then((unityInstance) => {
+            document.querySelector("#start-ar-btn").style.display = "block";
+            document.querySelector("#start-ar-btn").addEventListener("click", () => {
+                document.querySelector("#loading-overlay").style.display = "none";
+                document.querySelector('a-scene').systems['mindar-image-system'].start();
             });
-        };
-        document.body.appendChild(script);
+        });
     </script>
 </body>
 </html>
