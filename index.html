@@ -6,14 +6,15 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.gstatic.com https://aframe.io blob:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self' https: blob: data:; worker-src 'self' blob:;">
     
     <title>VirtualMenus_App</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-      body { padding: 0; margin: 0; overflow: hidden; }
-      #unity-container { width: 100% !important; height: 100% !important; position: fixed; }
-      #unity-canvas { width: 100% !important; height: 100% !important; background: #231f20; }
-      #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; }
+      body { padding: 0; margin: 0; overflow: hidden; background-color: transparent; }
+      #unity-container { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+      #unity-canvas { width: 100% !important; height: 100% !important; background: transparent !important; }
+      #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      #unity-logo { width: 154px; height: 130px; background: url('SplashVirtualMenus.jpg') no-repeat center; background-size: contain; margin: 0 auto; }
+      #unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; }
+      #unity-progress-bar-full { width: 0%; height: 100%; background: #00aaff; transition: width 0.3s; }
     </style>
   </head>
   <body>
@@ -24,41 +25,33 @@
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
         </div>
+        <p style="color: white; text-align: center; font-family: sans-serif;">Cargando Experiencia...</p>
       </div>
     </div>
 
+    <script src="Build/virtual-menus-web.loader.js?v=0.1"></script>
     <script>
-      var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/virtual-menus-web.loader.js";
       var config = {
-        dataUrl: buildUrl + "/virtual-menus-web.data",
-        frameworkUrl: buildUrl + "/virtual-menus-web.framework.js",
-        codeUrl: buildUrl + "/virtual-menus-web.wasm",
+        dataUrl: "Build/virtual-menus-web.data?v=0.1",
+        frameworkUrl: "Build/virtual-menus-web.framework.js?v=0.1",
+        codeUrl: "Build/virtual-menus-web.wasm?v=0.1",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Virtual_Menus",
         productName: "VirtualMenus_App",
         productVersion: "0.1",
       };
 
-      loadingBar.style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
+      createUnityInstance(canvas, config, (progress) => {
+        progressBarFull.style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        loadingBar.style.display = "none";
+      }).catch((message) => {
+        alert(message);
+      });
     </script>
   </body>
 </html>
